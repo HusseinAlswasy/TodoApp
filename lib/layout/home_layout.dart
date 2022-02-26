@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:todoapp/modules/ArchivedTasks/ArchivedTasks.dart';
@@ -7,6 +8,7 @@ import 'package:todoapp/modules/NewTasks/NewTasks.dart';
 
 class HomeLayout extends StatefulWidget {
    const HomeLayout({Key? key}) : super(key: key);
+
 
   @override
   State<HomeLayout> createState() => _HomeLayoutState();
@@ -29,7 +31,11 @@ class _HomeLayoutState extends State<HomeLayout> {
     'Done Tasks',
     'Archived Tasks',
   ];
-  late Database database;
+
+   Database? database;
+   var scaffoldKey = GlobalKey<ScaffoldState>();
+   bool isBottomSheetShown =false;
+   IconData FabIcon = Icons.edit;
 
   @override
   void initState() {
@@ -40,6 +46,7 @@ class _HomeLayoutState extends State<HomeLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: Center(
           child:
@@ -54,25 +61,31 @@ class _HomeLayoutState extends State<HomeLayout> {
       ),
       body: Screens[CurrentIndex],
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // try{
-          //   var name =await getName();
-          //   print(name);
-          //   throw('some error');
-          // }catch(error){
-          //   print('Error ${error.toString()}');
-          //
-          // }
-          getName().then((value) {
-            print(value);
-            print('osama');
-            //throw('New error');
-          }).catchError((error) {
-            print(' Error ${error.toString()}');
-          });
+        onPressed: ()
+        {
+          if(isBottomSheetShown)
+            {
+              Navigator.pop(context);
+              isBottomSheetShown=false;
+              setState(() {
+                FabIcon = Icons.edit;
+              });
+            }else{
+            scaffoldKey.currentState!.showBottomSheet(
+                  (context)=> Container(
+                width: double.infinity,
+                height: 180,
+                color: Colors.deepPurple,
+              ),
+            );
+            isBottomSheetShown = true;
+            setState(() {
+              FabIcon= Icons.add;
+            });
+          }
         },
-        child: const Icon(
-            Icons.add
+        child:Icon(
+            FabIcon,
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -112,17 +125,17 @@ class _HomeLayoutState extends State<HomeLayout> {
   }
 
   void createDatabase() async {
-     database = await openDatabase(
+    database = await openDatabase(
       'todo.db',
       version: 1,
-      onCreate: (database, version) {
+      onCreate: (database, version) async {
         print('database created');
-        database.execute(
-            'CREATE TABLE tasks (id INTEGER PRIMARY KEY , title TEXT , data TEXT ,date TEXT ,status TEXT)')
+        await database.execute(
+            'CREATE TABLE tasks(id INTEGER PRIMARY KEY ,title TEXT ,time TEXT ,date TEXT ,status TEXT ,time TEXT )')
             .then((value) {
-          print('Create table');
+          print('create table');
         }).catchError((error) {
-          print('Error when creating Table ${error.toString()}');
+          print('Error${error.toString()}');
         });
       },
       onOpen: (database) {
@@ -131,7 +144,17 @@ class _HomeLayoutState extends State<HomeLayout> {
     );
   }
 
-  void insertToDatabase(){
-
+  void insertToDatabase() {
+    database!.transaction((txn) {
+      txn.rawInsert(
+        'INSERT INTO tasks(title,time,date,status) VALUES("First Row","02/22/2022","10","New")',
+      )
+          .then((value) {
+        print('$value Insert Tables');
+      }).catchError((error) {
+        print('Error when Inserting new Row ${error.toString()}');
+      });
+      return null!;
+    });
   }
 }
