@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:todoapp/layout/home_layout.dart';
+import 'package:bloc/bloc.dart';
+import 'package:todoapp/shared/bloc_observer.dart';
+
 
 void main(){
-  runApp(const MyApp());
+  BlocOverrides.runZoned(
+        () {
+          runApp(const MyApp());
+    },
+    blocObserver: MyBlocObserver(),
+  );
+
 }
 
 class MyApp extends StatelessWidget{
@@ -10,7 +19,7 @@ class MyApp extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-   return const MaterialApp(
+   return  MaterialApp(
      debugShowCheckedModeBanner: false,
      home: HomeLayout(),
    );
